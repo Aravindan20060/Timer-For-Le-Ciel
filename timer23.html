@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D Countdown Timer with Dark Particle Background</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            background-color: #121212;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
+        }
+
+        #particles-js {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Make sure the particles are behind other content */
+        }
+
+        .title-background {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #000000; /* Black background */
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1; /* Ensure it is above other content */
+        }
+
+        .title {
+            color: #ffffff;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            margin: 0;
+        }
+
+        .flip-clock {
+            display: flex;
+            gap: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1; /* Ensure the countdown timer is above the particles */
+        }
+
+        .flip-card {
+            position: relative;
+            perspective: 1200px;
+        }
+
+        .card {
+            position: relative;
+            width: 100px;
+            height: 150px;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67), box-shadow 0.8s;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            color: #ffffff;
+            background: #222;
+            border-radius: 5px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.5);
+            backface-visibility: hidden;
+        }
+
+        .card-front {
+            transform: rotateY(0deg);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #333;
+        }
+
+        .flip-card.flip .card {
+            transform: rotateX(-90deg) scale(0.9);
+            box-shadow: 0 4px 30px rgba(255, 255, 255, 0.7);
+        }
+
+        .flip-card.flip .card-back {
+            transform: rotateX(0deg);
+        }
+
+        .label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaaaaa;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .card.pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        .falling-quote {
+            position: absolute;
+            color: #cccccc; /* Darker gray color for better visibility */
+            font-size: 36px; /* Larger font size */
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            font-weight: bold; /* Make the text bold for better readability */
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+
+    <div class="title-background">
+        <div class="title">Le Ciel: Countdown</div>
+    </div>
+    
+    <div class="flip-clock">
+        <div class="flip-card">
+            <div class="card" id="days">
+                <div class="card-face card-front">0</div>
+                <div class="card-face card-back">0</div>
+            </div>
+            <div class="label">Days</div>
+        </div>
+        <div class="flip-card">
+            <div class="card" id="hours">
+                <div class="card-face card-front">0</div>
+                <div class="card-face card-back">0</div>
+            </div>
+            <div class="label">Hours</div>
+        </div>
+        <div class="flip-card">
+            <div class="card" id="minutes">
+                <div class="card-face card-front">0</div>
+                <div class="card-face card-back">0</div>
+            </div>
+            <div class="label">Minutes</div>
+        </div>
+        <div class="flip-card">
+            <div class="card" id="seconds">
+                <div class="card-face card-front">0</div>
+                <div class="card-face card-back">0</div>
+            </div>
+            <div class="label">Seconds</div>
+        </div>
+    </div>
+
+    <div id="quotes-container"></div>
+
+    <!-- Include particles.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <!-- Initialize particles.js -->
+    <script>
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 100,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#ffffff"
+                },
+                "shape": {
+                    "type": "circle",
+                    "stroke": {
+                        "width": 0,
+                        "color": "#ffffff"
+                    }
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": false,
+                    "anim": {
+                        "enable": false,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 40,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#ffffff",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 6,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "repulse"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "repulse": {
+                        "distance": 100,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+
+        // Countdown Timer Script
+        const targetDate = new Date('September 18, 2024 00:00:00').getTime();
+
+        function updateTimer() {
+            const now = Date.now();
+            const timeDifference = targetDate - now;
+
+            // Calculate the days, hours, minutes, and seconds
+            const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+            // Update each flip card
+            flipCard(document.getElementById('days'), days);
+            flipCard(document.getElementById('hours'), hours);
+            flipCard(document.getElementById('minutes'), minutes);
+            flipCard(document.getElementById('seconds'), seconds);
+
+            // Request next frame
+            requestAnimationFrame(updateTimer);
+        }
+
+        function flipCard(card, newValue) {
+            const front = card.querySelector('.card-front');
+            const back = card.querySelector('.card-back');
+
+            if (front.textContent != newValue.toString()) {
+                back.textContent = front.textContent;
+                front.textContent = newValue;
+                card.classList.add('pulse');
+                card.parentElement.classList.add('flip');
+
+                setTimeout(() => {
+                    card.parentElement.classList.remove('flip');
+                    card.classList.remove('pulse');
+                }, 800);
+            }
+        }
+
+        // Initialize the timer
+        requestAnimationFrame(updateTimer);
+
+        // Quotes Script
+        const quotes = [
+            "Embrace the shadows; they hold the key to your true strength.",
+            "In darkness, you will find the light of your soul.",
+            "Sometimes, you must confront your own demons to find your true self.",
+            "The darkest nights produce the brightest stars.",
+            "In the depths of despair, hope is born.",
+            "Darkness is not to be feared but embraced.",
+            "From the shadows, we emerge stronger.",
+            "Your darkest phase is a path to your most brilliant self.",
+            "Only through the storm can you appreciate the calm.",
+            "Embrace the chaos, for it leads to clarity.",
+            "In every shadow, there's a flicker of light.",
+            "Let the darkness teach you about your own light.",
+            "Sometimes, you must lose yourself to find who you truly are.",
+            "Even in darkness, there are stars to guide you.",
+            "Face the shadows within to become your true self.",
+            "Embrace the night; it's the prelude to dawn.",
+            "The night is not to be feared but understood.",
+            "From the darkness of despair comes the light of hope.",
+            "To find peace, you must first understand the storm.",
+            "In your darkest hour, remember that dawn is on the horizon.",
+            "The struggle in darkness is what forges the strongest wills.",
+            "Even in shadows, there are lessons to be learned.",
+            "Through the darkness, the light of understanding shines brightest.",
+            "Embrace your shadow; it is part of your light.",
+            "From the void, strength and resilience are born.",
+            "The darkest phase is but a chapter in your journey to light.",
+            "In the abyss of despair, hope can be found.",
+            "Face your fears; they are the doorway to growth.",
+            "The storm will pass, but the lessons remain.",
+            "Embrace the unknown; it holds the keys to your transformation.",
+            "In the night, we find the path to the day.",
+            "Through the darkness, we discover our inner light.",
+            "Let the shadows guide you to your own brilliance.",
+            "Even the darkest hour is only temporary.",
+            "In the shadows, your true colors shine.",
+            "The night teaches us to appreciate the day.",
+            "From the depths of darkness, new strength arises.",
+            "Your dark moments are steps towards enlightenment.",
+            "In the heart of darkness lies the seed of light.",
+            "The dark phases are the prelude to personal growth.",
+            "In shadow, we find our own inner light.",
+            "Embrace your darkness; it leads to your true self.",
+            "Through struggle, we uncover our deepest strengths.",
+            "Even in darkness, the stars remind us of hope.",
+            "In your dark moments, remember: dawn is always near.",
+            "The journey through darkness is where we find our true selves."
+        ];
+
+        let quoteIndex = 0;
+        const interval = 3000; // Interval between quotes in milliseconds
+
+        function createFallingQuote(quote) {
+            const quoteElement = document.createElement('div');
+            quoteElement.className = 'falling-quote';
+            quoteElement.textContent = quote;
+            document.getElementById('quotes-container').appendChild(quoteElement);
+
+            const side = quoteIndex % 2 === 0 ? 'left' : 'right';
+            const startX = side === 'left' ? -200 : window.innerWidth - 300;
+            const duration = 20; // Fixed duration for all quotes
+
+            quoteElement.style[side] = '0'; // Align left or right based on the side
+            quoteElement.style.top = `-100px`;
+            quoteElement.style.opacity = 1;
+            quoteElement.style.transition = `top ${duration}s linear, opacity ${duration}s linear`;
+
+            requestAnimationFrame(() => {
+                quoteElement.style.top = `${window.innerHeight + 100}px`;
+                quoteElement.style.opacity = 0;
+            });
+
+            setTimeout(() => {
+                quoteElement.remove();
+            }, duration * 1000);
+        }
+
+        function startFallingQuotes() {
+            if (quoteIndex < quotes.length) {
+                createFallingQuote(quotes[quoteIndex]);
+                quoteIndex++;
+                setTimeout(startFallingQuotes, interval); // Schedule the next quote
+            }
+        }
+
+        // Start the falling quotes effect
+        startFallingQuotes();
+    </script>
+</body>
+</html>
